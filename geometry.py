@@ -11,15 +11,21 @@ class point:
         self.x = ics
         self.y = ips
         self.z = zeta
-    @property
     def distance(self, type=str):
         if type is geometry_type[1]:
-            dd = np.sqrt(self.x^2 + self.y^2 + self.z^2)
+            dd = np.sqrt(self.x**2 + self.y**2 + self.z**2)
         elif type is geometry_type[0]:
             dd = self.z
         else:
             dd = 'geometry_error'
         return dd
+    
+def sumpos(pp=point,qq=point):
+    xx = pp.x + qq.x
+    yy = pp.y + qq.y
+    zz = pp.z + qq.z
+    out = point(xx,yy,zz)
+    return out
 
 class direction:
     def __init__(self, PHI=float, TE=float, degr=bool):
@@ -48,33 +54,43 @@ class surface:
             return pp.distance - self.position
         else:
             return 'geometry_error'
-        
-class volume:
-    def __init__(self, iniz=surface, final=surface, tp=str):
-        self.surface1 = iniz
-        self.surface2 = final
-        self.width = final.position - iniz.position
-    def isinside(self, pp=point):
-        if pp.distance >= np.min([self.surface1.position,self.surface2.position]) and pp.distance <= np.max([self.surface1.position,self.surface2.position]):
-            return True
-        else:
-            return False
 
 class mesh:
-    def __init__(self, nn=int, ll=tuple, form=list[tuple], homo=bool, vect=None):
-        if homo is True:
-            self.discretization = np.linspace(ll[0], ll[1], nn)
-            self.delta = np.abs(ll[1]-ll[0])/nn
+    def __init__(self, nDim=int, lDim=None, nInt=None, homo=None, vect=None):
+        self.dimension = nDim
+        if nDim > 0:
+            if homo == True:
+                self.discretization = np.linspace(lDim[0], lDim[1], nInt)
+                self.delta = np.abs(lDim[1]-lDim[0])/nInt
+            else:
+                self.discretization = vect
+                self.delta = np.average([vect[ii+1]-vect[ii] for ii in range(len(vect)-1)])
         else:
-            self.discretization = vect
-            self.delta = np.average([vect[ii+1]-vect[ii] for ii in range(len(vect)-1)])
-        self.composition = []
-        jj=0
-        for ii in range(nn):
-            self.composition.append(form[jj][0])
-            if self.discretization[ii] >= form[jj][2]:
-                jj+=1
+            self.discretization = 0
 
+class domain:
+    def __init__(self, disct=mesh, mat=list[tuple], simtype=str, en=tuple,log=bool):
+        if log == True:
+            self.energyrange = np.logspace(np.log10(en[0]),np.log10(en[1]),en[2])
+        else:
+            self.energyrange = np.linspace(en[0],en[1],en[2])
+        self.geometrytype = simtype
+        self.mesh = disct
+        self.materials = []
+        for ii in range(len(mat)):
+            self.materials.append(mat[ii][0])
+        self.materialposition = []
+        for ii in range(len(mat)):
+            self.materialposition.append((mat[ii][1],mat[ii][2]))
+            
+    def findposition(self, pp=point): # torna l'indice corrispettivo del materiale
+        vett = []
+        for ii in self.materialposition:
+            vett.append(ii[1])
+        index = np.where(pp.distance(self.geometrytype) <= vett)[0][0]
+        return index
+    
         
+
 
         

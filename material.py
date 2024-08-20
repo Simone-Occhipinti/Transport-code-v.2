@@ -1,5 +1,4 @@
 #material
-
 import numpy as np
 import scipy as sp
 from math import pi
@@ -8,6 +7,7 @@ class isotope:
     def __init__(self, atm_num=int, mas_num=int, dens=float, energy=np.array, tot=np.array, scatt=np.array, fiss=None, nu=None):
         self.atomic_number = atm_num
         self.mass_number = mas_num
+        self.alpha = ((mas_num-1)/(mas_num+1))**2
         self.micro_xs_total = tot/1E24
         self.micro_xs_scattering = scatt/1E24
         self.micro_xs_absorption = self.micro_xs_total-self.micro_xs_scattering
@@ -23,9 +23,10 @@ class isotope:
         self.energy = energy
 
 class material:
-    def __init__(self, parts=list[isotope]):
+    def __init__(self, parts=list[isotope],erange=tuple):
+        self.energy = np.logspace(np.log10(erange[0]),np.log10(erange[1]),erange[2])
+        self.composition = parts
         nn = len(parts)
-        self.energy = parts[0].energy
         self.macro_total = np.zeros(len(parts[0].micro_xs_total))
         self.macro_scattering = np.zeros(len(parts[0].micro_xs_total))
         self.macro_absorption = np.zeros(len(parts[0].micro_xs_total))
